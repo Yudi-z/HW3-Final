@@ -88,11 +88,11 @@ app.layout = html.Div([
             style={'display': 'inline-block'}
         ),
         dcc.Dropdown(
-            options = [
+            options=[
                 '1 secs', '5 secs', '10 secs', '15 secs', '30 secs', '1 min',
-                '2 mins', '3 mins',	'5 mins', '10 mins', '15 mins',
-                '20 mins', '30 mins', '1 hour',	'2 hours',	'3 hours',
-                '4 hours', '8 hours',  '1 day', '1 week', '1 month'
+                '2 mins', '3 mins', '5 mins', '10 mins', '15 mins',
+                '20 mins', '30 mins', '1 hour', '2 hours', '3 hours',
+                '4 hours', '8 hours', '1 day', '1 week', '1 month'
             ],
             id='bar-size',
             value='1 hour',
@@ -125,7 +125,7 @@ app.layout = html.Div([
                     children=[
                         html.Label('Unit:', style={'display': 'inline-block'}),
                         dcc.Dropdown(
-                            options = [
+                            options=[
                                 {'label': 'Seconds', 'value': 'S'},
                                 {'label': 'Days', 'value': 'D'},
                                 {'label': 'Weeks', 'value': 'W'},
@@ -204,7 +204,7 @@ app.layout = html.Div([
                     type='text',
                     style={'display': 'inline-block'}
                 )],
-                style = {'display': 'inline-block'}
+                style={'display': 'inline-block'}
             ),
             html.Div([
                 html.H4(
@@ -217,7 +217,7 @@ app.layout = html.Div([
                     type='text',
                     style={'display': 'inline-block'}
                 )],
-                style = {'display': 'inline-block'}
+                style={'display': 'inline-block'}
             ),
             html.Div([
                 html.H4(
@@ -231,7 +231,7 @@ app.layout = html.Div([
                     style={'display': 'inline-block'}
                 )
             ],
-                style = {'display': 'inline-block'}
+                style={'display': 'inline-block'}
             )
         ]
         ),
@@ -271,9 +271,109 @@ app.layout = html.Div([
     # Numeric input for the trade amount
     dcc.Input(id='trade-amt', value='20000', type='number'),
     # Submit button for the trade
-    html.Button('Trade', id='trade-button', n_clicks=0)
+    html.Button('Trade', id='trade-button', n_clicks=0),
+
+    html.Br(),
+    html.H4("Enter the trading information:"),
+    html.H4("   Contract inputs:"),
+
+    html.Div(
+        children=[
+            html.Div(
+                children=[
+                    html.Label("symbol: "),
+                    dcc.Input(
+                        id='contract-symbol', value='TSLA', type='text'
+                    )
+                ]
+            ),
+            html.Div(
+                children=[
+                    html.Label("secType: "),
+                    dcc.Dropdown(
+                        ["CASH", "STK", "CRYPTO"],
+                        "STK",
+                        id='contract-secType'
+                    )
+                ],
+                style={'display': 'inline-block'}
+            ),
+            html.Div(
+                children=[
+                    html.Label("currency: "),
+                    dcc.Input(
+                        id='contract-currency', value='USD', type='text'
+                    )
+                ]),
+            html.Div(
+                children=[
+                    html.Label("exchange: "),
+                    dcc.Input(
+                        id='contract-exchange', value='SMART', type='text'
+                    )
+                ]),
+            html.Div(
+                children=[
+                    html.Label("primary exchange: "),
+                    dcc.Input(
+                        id='contract-primary-exchange', value='ARCA', type='text'
+                    )
+                ])
+        ]
+
+    ),
+
+    html.H4("   Order inputs:"),
+    html.Div(
+        children=[
+            html.Div(
+                dcc.RadioItems(
+                    id='order-action',
+                    options=[
+                        {'label': 'BUY', 'value': 'BUY'},
+                        {'label': 'SELL', 'value': 'SELL'}
+                    ],
+                    value='BUY'
+                ),
+            ),
+
+            html.Div(
+                children=[
+                    html.Label("totalQuantity: "),
+                    dcc.Input(
+                        id='order-totalQuantity', value='100', type='number'
+                    )
+                ]
+            ),
+
+            html.Div(
+                children=[
+                    html.Label("orderType: "),
+                    dcc.Dropdown(
+                        ["MKT", "LMT"],
+                        "MKT",
+                        id='order-orderType')
+                ],
+                style={'display': 'inline-block'}
+            ),
+
+            html.Div(
+                children=[
+                    html.Label("lmtPrice: "),
+                    dcc.Input(
+                        id='order-lmtPrice', value='0', type='number'
+                    )
+                ]
+            )
+        ]
+
+    ),
+    html.Br(),
+    # Submit button
+    html.Button('TRADE', id='trade-button', n_clicks=0),
 
 ])
+
 
 @app.callback(
     [
@@ -295,8 +395,9 @@ def update_connect_indicator(n_clicks, host, port, clientid):
         sync_connection_status = "False"
     return message, sync_connection_status
 
+
 @app.callback(
-    [ # there's more than one output here, so you have to use square brackets to
+    [  # there's more than one output here, so you have to use square brackets to
         # pass it in as an array.
         Output(component_id='currency-output', component_property='children'),
         Output(component_id='candlestick-graph', component_property='figure')
@@ -317,7 +418,7 @@ def update_connect_indicator(n_clicks, host, port, clientid):
      State('duration-unit', 'value'), State('host', 'value'),
      State('port', 'value'),
      State('clientid', 'value')],
-    prevent_initial_call = True
+    prevent_initial_call=True
 )
 def update_candlestick_graph(n_clicks, currency_string, what_to_show,
                              edt_date, edt_hour, edt_minute, edt_second,
@@ -329,9 +430,9 @@ def update_candlestick_graph(n_clicks, currency_string, what_to_show,
     # First things first -- what currency pair history do you want to fetch?
     # Define it as a contract object!
     contract = Contract()
-    contract.symbol   = currency_string.split(".")[0]
-    contract.secType  = 'CASH'
-    contract.exchange = 'IDEALPRO' # 'IDEALPRO' is the currency exchange.
+    contract.symbol = currency_string.split(".")[0]
+    contract.secType = 'CASH'
+    contract.exchange = 'IDEALPRO'  # 'IDEALPRO' is the currency exchange.
     contract.currency = currency_string.split(".")[1]
 
     try:
@@ -350,7 +451,7 @@ def update_candlestick_graph(n_clicks, currency_string, what_to_show,
     if any([i is None for i in [edt_date, edt_hour, edt_minute, edt_second]]):
         endDateTime = ''
     else:
-        endDateTime = str(edt_date).replace("-","") + " " + \
+        endDateTime = str(edt_date).replace("-", "") + " " + \
                       '{:0>2}'.format(edt_hour) + ":" + \
                       '{:0>2}'.format(edt_hour) + ":" + \
                       '{:0>2}'.format(edt_minute)
@@ -405,6 +506,7 @@ def update_candlestick_graph(n_clicks, currency_string, what_to_show,
     #   candlestick-graph outputs
     return currency_string, fig
 
+
 # Callback for what to do when trade-button is pressed
 @app.callback(
     # We're going to output the result to trade-output
@@ -423,7 +525,7 @@ def trade(n_clicks, action, trade_currency, trade_amt, host, port, clientid):
     # Still don't use n_clicks, but we need the dependency
 
     # Make the message that we want to send back to trade-output
-    msg = action + ' ' + trade_amt + ' ' + trade_currency
+    msg = str(action) + ' ' + str(trade_amt) + ' ' + str(trade_currency)
 
     order = Order()
     order.action = action
@@ -432,6 +534,34 @@ def trade(n_clicks, action, trade_currency, trade_amt, host, port, clientid):
 
     # Return the message, which goes to the trade-output div's children
     return msg
+
+@app.callback(
+    # We're going to output the result to trade-output
+    Output(component_id='trade-output', component_property='children'),
+    # Only run this callback function when the trade-button is pressed
+    Input('trade-button', 'n_clicks'),
+    # We DON'T want to run this function whenever buy-or-sell, trade-currency,
+    #   or trade-amt is updated, so we pass those in as States, not Inputs:
+    [State('buy-or-sell', 'value'), State('trade-currency', 'value'),
+     State('trade-amt', 'value'), State("host", "value"),
+     State("port", "value"), State("clientid", "value")],
+    # DON'T start executing trades just because n_clicks was initialized to 0!!!
+    prevent_initial_call=True
+)
+def trade(n_clicks, action, trade_currency, trade_amt, host, port, clientid):
+    # Still don't use n_clicks, but we need the dependency
+
+    # Make the message that we want to send back to trade-output
+    msg = str(action) + ' ' + str(trade_amt) + ' ' + str(trade_currency)
+
+    order = Order()
+    order.action = action
+    order.orderType = "MKT"
+    order.totalQuantity = trade_amt
+
+    # Return the message, which goes to the trade-output div's children
+    return msg
+
 
 # Run it!
 if __name__ == '__main__':
